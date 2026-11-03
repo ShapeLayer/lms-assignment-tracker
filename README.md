@@ -4,6 +4,10 @@ LMS 시스템에 등록된 과제를 브라우저에 저장하고 마감 전에 
 
 ## Getting Started
 
+이 확장 프로그램을 소속 학교의 LMS 시스템에 사용하려면, 새 LMS Adaptor를 추가하여야 합니다. 자세한 내용은 [LMS Adaptor 개발 가이드](./docs/adaptor.md)를 참고하세요.  
+
+## Developing
+
 1. Node.js와 npm을 설치하고 프로젝트 폴더에서 `npm ci`를 실행합니다.
 2. `npm run build`를 실행해 `dist/` 폴더를 생성합니다.
 3. Chrome에서 `chrome://extensions`를 열고 개발자 모드를 켭니다.
