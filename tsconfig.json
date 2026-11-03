@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"],
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "noEmitOnError": true
+  },
+  "include": [
+    "core/**/*.ts",
+    "adaptor/**/*.ts",
+    "dashboard/**/*.ts",
+    "types/**/*.d.ts"
+  ]
+}

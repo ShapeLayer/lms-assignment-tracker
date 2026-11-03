@@ -1,0 +1,20 @@
+{
+  "name": "lms-assignment-tracker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && tsc && esbuild adaptor/jnu.ts --bundle --format=esm --platform=browser --target=chrome116 --outfile=dist/adaptor/jnu.js && node scripts/copy-assets.mjs",
+    "test": "npm run build && node --test tests/*.test.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "parse5": "^7.3.0"
+  }
+}

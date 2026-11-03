@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "과제 달력",
+  "version": "1.0.0",
+  "description": "LMS 과제를 추적하고 마감 전에 알려줍니다.",
+  "permissions": ["storage", "alarms", "notifications", "offscreen"],
+  "host_permissions": ["https://sel.jnu.ac.kr/*"],
+  "background": {
+    "service_worker": "core/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "dashboard/popup.html",
+    "default_title": "과제 달력"
+  },
+  "icons": {
+    "128": "icons/icon128.png"
+  }
+}
