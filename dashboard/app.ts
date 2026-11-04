@@ -89,11 +89,19 @@ function calendar() {
       date.getDay() === 6 ||
       !next.items.length ||
       next.count !== count;
+    const baseStart = n === 1 || date.getDay() === 0 || !previous.items.length;
+    const baseEnd = n === days || date.getDay() === 6 || !next.items.length;
+    const overlapNext =
+      items.length > 0 &&
+      n < days &&
+      date.getDay() !== 6 &&
+      next.items.length > 0 &&
+      next.count !== count;
     const showCount = start || end || key === dateKey(new Date());
     const tooltip = items.length
       ? `<span class="tooltip" role="tooltip"><strong>${items.length}개 중 ${items.length - count}개 완료</strong>${pending.map((a) => `<span>${esc(a.title)}</span>`).join("") || "<span>모두 완료</span>"}</span>`
       : "";
-    cells += `<button class="day ${key === selected ? "selected" : ""} ${key === dateKey(new Date()) ? "today" : ""} ${items.length ? "has-items" : ""} ${start ? "range-start" : ""} ${end ? "range-end" : ""}" data-date="${key}" aria-label="${m + 1}월 ${n}일${items.length ? `, 남은 과제 ${count}개` : ""}"><span class="day-number">${n}</span>${items.length ? `<span class="highlight" data-opacity="${highlightOpacity(count, peak)}">${showCount ? `<span class="count">${count}</span>` : ""}</span>` : ""}${tooltip}</button>`;
+    cells += `<button class="day ${key === selected ? "selected" : ""} ${key === dateKey(new Date()) ? "today" : ""} ${items.length ? "has-items" : ""} ${start ? "range-start" : ""} ${end ? "range-end" : ""} ${baseStart ? "base-start" : ""} ${baseEnd ? "base-end" : ""} ${overlapNext ? "overlap-next" : ""}" data-date="${key}" aria-label="${m + 1}월 ${n}일${items.length ? `, 남은 과제 ${count}개` : ""}"><span class="day-number">${n}</span>${items.length ? `<span class="highlight-base" aria-hidden="true"></span><span class="highlight" data-opacity="${(highlightOpacity(count, peak) - 0.25) / 0.75}">${showCount ? `<span class="count">${count}</span>` : ""}</span>` : ""}${tooltip}</button>`;
   }
   return `<section class="calendar"><div class="calendar-head"><div><span class="eyebrow">CALENDAR</span><h2>${y}<span class="month-dot">.</span> ${String(m + 1).padStart(2, "0")}</h2></div><div class="month-controls"><button data-action="prev" aria-label="이전 달">‹</button><button data-action="next" aria-label="다음 달">›</button></div></div><div class="weekdays">${["일", "월", "화", "수", "목", "금", "토"].map((d) => `<span>${d}</span>`).join("")}</div><div class="grid">${cells}</div></section>`;
 }
@@ -117,7 +125,7 @@ function render() {
     .forEach((element) => {
       element.style.setProperty(
         "--highlight-opacity",
-        element.dataset.opacity || "0.25",
+        element.dataset.opacity ?? "0",
       );
     });
   calendarObserver?.disconnect();

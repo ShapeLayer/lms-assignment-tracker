@@ -547,13 +547,30 @@ a {
   min-width: 16px;
   text-align: center;
 }
+.highlight-base,
 .highlight {
   position: absolute;
   left: 0;
   right: 0;
   top: 21px;
   height: 25px;
-  background: rgb(215 237 140 / var(--highlight-opacity, 1));
+}
+.highlight-base {
+  background: rgb(215 237 140 / 0.25);
+}
+.base-start .highlight-base {
+  left: 3px;
+  border-radius: 14px 0 0 14px;
+}
+.base-end .highlight-base {
+  right: 3px;
+  border-radius: 0 14px 14px 0;
+}
+.base-start.base-end .highlight-base {
+  border-radius: 14px;
+}
+.highlight {
+  background: rgb(215 237 140 / var(--highlight-opacity, 0));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -568,6 +585,26 @@ a {
 }
 .range-start.range-end .highlight {
   border-radius: 14px;
+}
+/* Continue the ending range into the next cell beneath the new range. */
+.overlap-next .highlight::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: calc(50% + 3px);
+  border-radius: 0 14px 14px 0;
+  background: rgb(215 237 140 / var(--highlight-opacity, 1));
+  pointer-events: none;
+}
+.overlap-next:hover .highlight::after,
+.overlap-next:focus-visible .highlight::after {
+  background: rgb(201 229 121 / var(--highlight-opacity, 1));
+}
+.overlap-next .count {
+  position: relative;
+  z-index: 1;
 }
 .day:hover .highlight,
 .day:focus-visible .highlight {
@@ -593,6 +630,7 @@ a {
 .dashboard .blank {
   height: 68px;
 }
+.dashboard .highlight-base,
 .dashboard .highlight {
   top: 26px;
   height: 32px;
@@ -610,6 +648,7 @@ a {
   .dashboard .blank {
     height: 52px;
   }
+  .dashboard .highlight-base,
   .dashboard .highlight {
     top: 21px;
     height: 25px;
