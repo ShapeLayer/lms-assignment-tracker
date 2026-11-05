@@ -12,6 +12,7 @@ import {
   const origin = JNU_ORIGIN;
   const MAX_REQUESTS = 100;
   class RequestLimitError extends Error {}
+  class SessionError extends Error {}
   let requestCount = 0;
   const get = async (path: string) => {
     if (requestCount >= MAX_REQUESTS)
@@ -24,11 +25,26 @@ import {
             .find(Boolean);
     if (!url) throw new Error("허용되지 않은 LMS 주소입니다");
     requestCount++;
-    const response = await fetch(url, {
-      credentials: "include",
-      redirect: "error",
-      signal: AbortSignal.timeout(15000),
-    });
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        credentials: "include",
+        redirect: "error",
+        signal: AbortSignal.timeout(15000),
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError")
+      ) {
+        throw new Error(
+          "LMS 응답 시간이 초과되었습니다. 네트워크 연결을 확인해 주세요.",
+        );
+      }
+      throw new Error(
+        "LMS에 연결하지 못했습니다. 로그인 상태, 사이트 접근 권한과 네트워크를 확인해 주세요. 로그인 페이지로 이동하는 응답도 차단됩니다.",
+      );
+    }
     if (new URL(response.url).origin !== origin)
       throw new Error("허용되지 않은 LMS 응답입니다");
     if (!response.ok) throw new Error(`LMS 요청 실패 (${response.status})`);
@@ -42,7 +58,9 @@ import {
           attribute(e, "type").toLowerCase() === "password",
       )
     )
-      throw new Error("LMS 로그인이 필요합니다");
+      throw new SessionError(
+        "LMS 로그인이 필요합니다. 같은 Chrome 프로필에서 LMS에 로그인해 주세요.",
+      );
     return doc;
   };
   const links = (doc: LmsDocument, page: JnuPage): string[] =>
@@ -144,39 +162,61 @@ import {
       );
     const assignments: ReturnType<typeof parseAssignment>[] = [];
     let failures = 0;
+    const failureReasons = new Map<string, number>();
+    const recordFailure = (stage: string, error: unknown) => {
+      failures++;
+      const detail = error instanceof Error ? error.message : "알 수 없는 오류";
+      const key = `${stage}: ${detail}`;
+      failureReasons.set(key, (failureReasons.get(key) || 0) + 1);
+    };
+    let coursesRead = 0;
     for (const courseUrl of courses) {
       try {
         const course = await get(courseUrl);
+        coursesRead++;
         let urls = links(course, "assignment");
         const index = links(course, "index")[0];
         if (index) {
           try {
             urls.push(...links(await get(index), "assignment"));
           } catch (error) {
-            if (error instanceof RequestLimitError) throw error;
-            failures++;
+            if (
+              error instanceof RequestLimitError ||
+              error instanceof SessionError
+            )
+              throw error;
+            recordFailure("과제 목록", error);
           }
         }
         for (const url of unique(urls)) {
           try {
             assignments.push(parseAssignment(await get(url), url));
           } catch (error) {
-            if (error instanceof RequestLimitError) throw error;
-            failures++;
+            if (
+              error instanceof RequestLimitError ||
+              error instanceof SessionError
+            )
+              throw error;
+            recordFailure("과제 상세", error);
           }
         }
       } catch (error) {
+        if (error instanceof SessionError) throw error;
         if (error instanceof RequestLimitError) {
-          failures++;
+          recordFailure("요청 제한", error);
           break;
         }
-        failures++;
+        recordFailure("강의", error);
       }
     }
+    if (!coursesRead && failures)
+      throw new Error(
+        "강의 정보를 불러오지 못했습니다. LMS 로그인과 네트워크를 확인해 주세요.",
+      );
     return {
       assignments,
       warning: failures
-        ? `일부 항목 ${failures}개를 동기화하지 못했습니다`
+        ? `일부 항목 ${failures}개를 동기화하지 못했습니다. ${[...failureReasons.entries()].map(([reason, count]) => `${reason} (${count}건)`).join("; ")}`
         : null,
     };
   }

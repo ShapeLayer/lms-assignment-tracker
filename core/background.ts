@@ -62,6 +62,13 @@ function sync(): Promise<void> {
 }
 async function performSync(): Promise<void> {
   try {
+    const permitted = await chrome.permissions.contains({
+      origins: ["https://sel.jnu.ac.kr/*"],
+    });
+    if (!permitted)
+      throw new Error(
+        "LMS 사이트 접근 권한이 없습니다. Chrome 확장 프로그램 설정에서 사이트 액세스를 확인해 주세요.",
+      );
     await ensureAdapter();
     const result = await chrome.runtime.sendMessage({
       target: "jnu-adapter",
